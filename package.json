@@ -1,0 +1,39 @@
+{
+  "name": "promises-arrow",
+  "version": "1.0.0",
+  "description": "`promises-arrow` is a library of of higher order functions, such as `map()` and `filter()`. These functions take a lambda/arrow that produce a Promise.",
+  "author": {
+    "name": "Rick Mugridge",
+    "email": "rick.mugridge@hypr.co.nz"
+  },
+  "keywords": [
+    "promise", "higher-order"
+  ],
+  "license": "Apache 2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rickmugridge/promises-arrow"
+  },
+  "homepage": "https://github.com/rickmugridge/promises-arrow",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "engines": {
+    "node": ">=10.13.0"
+  },
+  "scripts": {
+    "clean": "rimraf dist/**",
+    "compile": "tsc -p .",
+    "test:micro": "npm run clean && npm run compile && npm run retest:micro",
+    "retest:micro": "mocha --exit \"./dist/src/**/*.micro.js\""
+  },
+  "devDependencies": {
+    "@types/mocha": "^5.2.3",
+    "@types/node": "~9.4.6",
+    "mocha": "^5.2.0",
+    "rimraf": "^2.6.2",
+    "mismatched": "1.2.10",
+    "ts-node": "^6.2.0",
+    "thespian": "1.0.1",
+    "typescript": "3.5.2"
+  }
+}
