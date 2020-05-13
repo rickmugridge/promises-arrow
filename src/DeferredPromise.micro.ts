@@ -1,9 +1,9 @@
-import {DeferredPromise} from "./DeferredPromise";
 import {assertThat} from "mismatched";
+import {promises} from "./promises";
 
 describe("DeferredPromise:", () => {
     it("resolve()s", () => {
-        const defer = new DeferredPromise<number>();
+        const defer = promises.deferredPromise<number>();
         const promise = defer.promise;
         setTimeout(() =>
             defer.resolve(3), 2);
@@ -11,7 +11,7 @@ describe("DeferredPromise:", () => {
     });
 
     it("rejects()s", () => {
-        const defer = new DeferredPromise<number>();
+        const defer = promises.deferredPromise<number>();
         const promise = defer.promise;
         setTimeout(() =>
             defer.reject("error"), 2);
