@@ -125,6 +125,32 @@ If the Promise rejects or the timeout is exceeded, the resulting Promise is reje
 
 ```
 
+## Retry
+
+#### + `retryOverExceptions<T>(fn: () => Promise<T>, logger: (message: any) => void, retries = 3, timeout = 100): Promise<T>`
+
+ * This runs the `fn` and returns its result. 
+ * However, if an exception is thrown while executing `fn`, it is retried up to `retries` times
+   * Each time it retries, it first delays for `timeout` milliseconds, which is doubled each time for exponential back-off.
+
+For example, this is useful for dealing with:
+ * Temporary exceptions on calls to other services
+ * Temporary exceptions on DB updates due to competing updates
+
+#### + `retryOnTimeout<T>(fn: () => Promise<T>, logger: (message: any) => void, retries = 5, timeout = 100, allowedException: (e) => boolean = () => false): Promise<T>`
+
+Similar to `retryOverExceptions`, except that it also allows for timeouts.
+
+ * This runs the `fn` and returns its result. 
+ * However, if an allowed exception is thrown while executing `fn`, it rejects immediately.
+   This is useful for example, when we expect to get an exception to signal EOF.
+ * However, if an exception that is not allowed is thrown while executing `fn`, it is retried up to `retries` times.
+   * Each time it retries, it first has a `timeout` delay, which is doubled each time for exponential back-off.
+
+For example, this is useful for dealing with:
+ * Temporary exceptions or timeouts on calls to other services
+ * Calls that result in an exception to signal end of processing, such as when reading bytes from S3
+
 ## SlidingWindow
 
 Writing/sending with a sliding window means that only so many sends can be in progress.

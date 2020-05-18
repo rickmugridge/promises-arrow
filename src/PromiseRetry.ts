@@ -4,8 +4,8 @@ export class PromiseRetry {
     // Try the fn up to N times until it succeeds with a delay after each failure. Uses exponential back-off
     static retryOverExceptions<T>(fn: () => Promise<T>,
                                   logger: (message: any) => void,
-                                  retries: number = 3,
-                                  timeout: number = 100): Promise<T> {
+                                  retries = 3,
+                                  timeout = 100): Promise<T> {
         return Promise
             .resolve()
             .then(() => fn())
@@ -20,12 +20,13 @@ export class PromiseRetry {
             });
     }
 
-    // If the fn call times out, or an acceptable exception is thrown on that call, we try again after a delay.
+    // If the fn call times out, or an unacceptable exception is thrown on that call, we try again after a delay.
     // We try N times and then give up.
+    // However, if an allowedException is thrown, we reject on that immediately. That may be needed, eg, for determining EOF.
     static retryOnTimeout<T>(fn: () => Promise<T>,
                              logger: (message: any) => void,
-                             retries: number = 5,
-                             timeout: number = 100,
+                             retries = 5,
+                             timeout = 100,
                              allowedException: (e) => boolean = () => false): Promise<T> {
         if (retries <= 0) {
             return Promise.reject(new Error('timed out'));
@@ -45,10 +46,11 @@ export class PromiseRetry {
             })
             .catch(e => {
                 if (allowedException(e)) {
-                    logger({aim: "retry after allowed exception", timeout, exception: e.message, stack: e.stack});
-                    return PromiseRetry.retryOnTimeout(fn, logger, retries - 1, timeout * 2, allowedException);
+                    logger({aim: "Reject on allowed exception", timeout, exception: e.message, stack: e.stack});
+                    throw e;
                 }
-                throw e;
+                logger({aim: "retry after an exception that was not allowed", error: e.message});
+                return PromiseRetry.retryOnTimeout(fn, logger, retries - 1, timeout * 2, allowedException);
             });
     }
 }

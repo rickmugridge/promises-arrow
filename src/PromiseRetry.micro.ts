@@ -1,6 +1,7 @@
 import {assertThat} from "mismatched";
 import {promises} from "./promises";
 import {Thespian, TMocked} from "thespian";
+import {fail} from "assert";
 
 const logger = () => undefined;
 
@@ -99,36 +100,56 @@ describe('Promises:', () => {
                 });
         });
 
-        it('third one succeeds, as first takes too long and second fails (acceptably)', () => {
-            fn.setup(f => f()).returns(() => delayedPromise());
+        it('first one fails (acceptably)', () => {
             fn.setup(f => f()).returns(() => Promise.reject(new Error('error')));
-            fn.setup(f => f()).returns(() => Promise.resolve(200));
             return promises
                 .retryOnTimeout(fn.object, logger, 3, 1, error => error.message === 'error')
-                .then(result => {
-                    assertThat(result).is(200);
+                .then(result => fail('unexpected'), error =>{
+                    assertThat(error.message).is('error');
                     thespian.verify();
                 });
         });
 
-        it('third one succeeds, as first fails (acceptably) and second takes too long', () => {
-            fn.setup(f => f()).returns(() => Promise.reject(new Error('error')));
+        it('first takes too long and second fails (acceptably)', () => {
             fn.setup(f => f()).returns(() => delayedPromise());
-            fn.setup(f => f()).returns(() => Promise.resolve(200));
+            fn.setup(f => f()).returns(() => Promise.reject(new Error('error')));
             return promises
                 .retryOnTimeout(fn.object, logger, 3, 1, error => error.message === 'error')
-                .then(result => {
-                    assertThat(result).is(200);
+                .then(() => fail('unexpected'), error =>{
+                    assertThat(error.message).is('error');
                     thespian.verify();
                 });
         });
 
-        it('Fails as exception is not allowed', () => {
+        it('Exception is not allowed, so times out', () => {
             fn.setup(f => f()).returns(() => Promise.reject(new Error('wrong error')));
             return promises
                 .retryOnTimeout(fn.object, logger, 3, 1, error => error.message === 'error')
                 .catch(e => {
-                    assertThat(e.message).is('wrong error');
+                    assertThat(e.message).is('timed out');
+                    thespian.verify();
+                });
+        });
+
+        it('first fails (unacceptably), second takes too long, and third fails (acceptably)', () => {
+            fn.setup(f => f()).returns(() => Promise.reject(new Error('wrong error')));
+            fn.setup(f => f()).returns(() => delayedPromise());
+            fn.setup(f => f()).returns(() => Promise.reject(new Error('error')));
+            return promises
+                .retryOnTimeout(fn.object, logger, 3, 1, error => error.message === 'error')
+                .then(() => fail('unexpected'), error =>{
+                    assertThat(error.message).is('error');
+                    thespian.verify();
+                });
+        });
+
+        it('first fails (unacceptably), but second suceeds', () => {
+            fn.setup(f => f()).returns(() => Promise.reject(new Error('wrong error')));
+            fn.setup(f => f()).returns(() => Promise.resolve(200))
+            return promises
+                .retryOnTimeout(fn.object, logger, 3, 1, error => error.message === 'error')
+                .then(result => {
+                    assertThat(result).is(200);
                     thespian.verify();
                 });
         });
