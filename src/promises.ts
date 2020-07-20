@@ -28,6 +28,7 @@ export const promises = {
         WaitPromise.waitForTimeoutOrPromise<T>(timeout, fn),
 
     retryOverExceptions: PromiseRetry.retryOverExceptions,
+    retryOnTimeoutGivingFirstResult: PromiseRetry.retryOnTimeoutGivingFirstResult,
     retryOnTimeout: PromiseRetry.retryOnTimeout,
     slidingWindow: (context: string,
                     producer: SlidingWindowProducer,

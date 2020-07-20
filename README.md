@@ -151,6 +151,19 @@ For example, this is useful for dealing with:
  * Temporary exceptions or timeouts on calls to other services
  * Calls that result in an exception to signal end of processing, such as when reading bytes from S3
 
+#### + `retryOnTimeoutGivingFirstResult<T>(fn: () => Promise<T>, logger: (message: any) => void, retries = 5, timeout = 100): Promise<T>`
+
+Similar to `retryOnTimeout`, except that:
+ * It returns the first value returned by the `fn`, event after it has timed out once
+ * It does not have a notion of an allowed exception. Instead, it retries after an exception (up to the number of retries)
+ 
+Specifically:
+
+ * This runs the `fn` and returns its result. 
+ * However, if that times out, it tries again. But if an earlier call returns a value, that will be returned.
+ * However, if an exception is thrown while executing `fn`, it is retried up to `retries` times.
+   * Each time it retries, it first has a `timeout` delay, which is doubled each time for exponential back-off.
+
 ## SlidingWindow
 
 Writing/sending with a sliding window means that only so many sends can be in progress.

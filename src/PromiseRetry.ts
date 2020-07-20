@@ -1,5 +1,8 @@
 import {promises} from "./promises";
 
+const noValue = Symbol();
+const timedOutSymbol = Symbol();
+
 export class PromiseRetry {
     // Try the fn up to N times until it succeeds with a delay after each failure. Uses exponential back-off
     static retryOverExceptions<T>(fn: () => Promise<T>,
@@ -31,7 +34,6 @@ export class PromiseRetry {
         if (retries <= 0) {
             return Promise.reject(new Error('timed out'));
         }
-        const timedOutSymbol = Symbol();
         return Promise
             .race([
                 Promise.resolve().then(() => fn()),
@@ -53,5 +55,100 @@ export class PromiseRetry {
                 return PromiseRetry.retryOnTimeout(fn, logger, retries - 1, timeout * 2, allowedException);
             });
     }
+
+    // If the fn call times out, we try again after a delay.
+    // We try N times and then give up.
+    // However, the value from the earlier call is returned, regardless of timeouts.
+    static retryOnTimeoutGivingFirstResult<T>(fn: () => Promise<T>,
+                                              logger: (message: any) => void,
+                                              retries = 5,
+                                              timeout = 100): Promise<T> {
+        return PromiseRetry.retryOnTimeoutGivingFirstResult2(fn, logger, retries, timeout,
+            {value: noValue, timedOut:false})
+    }
+
+    private static retryOnTimeoutGivingFirstResult2<T>(fn: () => Promise<T>,
+                                                       logger: (message: any) => void,
+                                                       retries = 5,
+                                                       timeout = 100,
+                                                       state: RetryState<T>): Promise<T> {
+        if (state.value !== noValue) {
+            return Promise.resolve(state.value as T);
+        }
+        if (retries <= 0) {
+            state.timedOut = true;
+            return Promise.reject(new Error('timed out'));
+        }
+        return Promise
+            .race([
+                Promise.resolve()
+                    .then(() => fn())
+                    .then(value => {
+                        if (state.value === noValue) {
+                            state.value = value
+                        }
+                    }),
+                promises.waitForPromise(timeout, timedOutSymbol)
+            ])
+            .then(() => {
+                if (state.value !== noValue) {
+                    return state.value as T
+                }
+                logger({aim: "retry after timed out", timeout});
+                return PromiseRetry.retryOnTimeoutGivingFirstResult2(fn, logger, retries - 1, timeout * 2, state);
+            })
+            .catch(e => {
+                if (!state.timedOut) {
+                    logger({aim: "retry after an exception", error: e.message});
+                    return PromiseRetry.retryOnTimeoutGivingFirstResult2(fn, logger, retries - 1, timeout * 2, state);
+                }
+                throw e;
+            });
+    }
+
+    //
+    // private static retryOnTimeoutGivingFirstResult2<T>(fn: () => Promise<T>,
+    //                                                    logger: (message: any) => void,
+    //                                                    retries = 5,
+    //                                                    timeout = 100,
+    //                                                    state: RetryState<T>): Promise<T> {
+    //     if (state.value !== noValue) {
+    //         return Promise.resolve(state.value as T);
+    //     }
+    //     if (retries <= 0) {
+    //         return Promise.reject(new Error('timed out'));
+    //     }
+    //     // Run the timeout in parallel to allow for the fn() to resolve after the timeout
+    //     if (!state.timeoutInProgress) {
+    //         state.timeoutInProgress = true;
+    //         promises
+    //             .waitForPromise(timeout)
+    //             .then(() => {
+    //                 if (state.value === noValue) {
+    //                     logger({aim: "retry after timed out", timeout});
+    //                     state.timeoutInProgress = false;
+    //                     return PromiseRetry.retryOnTimeoutGivingFirstResult2(fn, logger, retries - 1,
+    //                         timeout * 2, state);
+    //                 }
+    //                 return Promise.resolve(state.value)
+    //             });
+    //     }
+    //     // Run the fn() call in parallel in case it resolves after it timed out
+    //     return Promise.resolve()
+    //         .then(() => fn())
+    //         .then(v => {
+    //             state.value = v;
+    //             return v;
+    //         })
+    //         .catch(e => {
+    //             logger({aim: "retry after an exception", error: e.message});
+    //             return PromiseRetry.retryOnTimeoutGivingFirstResult2(fn, logger, retries - 1,
+    //                 timeout * 2, state);
+    //         });
+    // }
 }
 
+interface RetryState<T> {
+    value: T | Symbol,
+    timedOut: boolean
+}
