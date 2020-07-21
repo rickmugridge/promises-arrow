@@ -237,7 +237,7 @@ describe('Promises:', () => {
             return promises
                 .retryOnTimeoutGivingFirstResult(fn.object, logger.object, 3, 1)
                 .then(result => fail('unexpected'), error => {
-                    assertThat(error.message).is('timed out');
+                    assertThat(error.message).is('error');
                     thespian.verify();
                 });
         });
@@ -250,7 +250,7 @@ describe('Promises:', () => {
             return promises
                 .retryOnTimeoutGivingFirstResult(fn.object, logger.object, 3, 1)
                 .then(() => fail('unexpected'), error => {
-                    assertThat(error.message).is('timed out');
+                    assertThat(error.message).is('error');
                     thespian.verify();
                 });
         });

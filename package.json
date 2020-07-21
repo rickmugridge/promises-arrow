@@ -1,6 +1,6 @@
 {
   "name": "promises-arrow",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "`promises-arrow` is a library of (1) higher order functions, such as `map()` and `filter()`where the function returns a Promisel (2) Functions that wait, returning a Promise; (3) Functions that manage retrying an operation N times until it succeeds; (4,5) etc.",
   "author": {
     "name": "Rick Mugridge",
