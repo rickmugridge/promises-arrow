@@ -1,9 +1,23 @@
 import {promises} from "./promises";
+import {Option} from "prelude-ts";
 
 const noValue = Symbol();
 const timedOutSymbol = Symbol();
 
 export class PromiseRetry {
+    // Try the fn up to N times until it succeeds with a delay after each failure to get a value. Uses exponential back-off
+    // Any exceptions thrown by the fn() are not caught; they are immediately passed out to the caller of poll()
+    static async poll<T>(fn: () => Promise<Option<T>>,
+                         retries = 3,
+                         timeout = 100): Promise<Option<T>> {
+        const result = await fn()
+        if (result.isSome() || retries <= 0) {
+            return result;
+        }
+        await promises.waitForPromise(timeout)
+        return await PromiseRetry.poll(fn, retries - 1, timeout * 2)
+    }
+
     // Try the fn up to N times until it succeeds with a delay after each failure. Uses exponential back-off
     static retryOverExceptions<T>(fn: () => Promise<T>,
                                   logger: (message: any) => void,
@@ -64,7 +78,7 @@ export class PromiseRetry {
                                               retries = 5,
                                               timeout = 100): Promise<T> {
         return PromiseRetry.retryOnTimeoutGivingFirstResult2(fn, logger, retries, timeout,
-            {value: noValue, timedOut:false})
+            {value: noValue, timedOut: false})
     }
 
     private static retryOnTimeoutGivingFirstResult2<T>(fn: () => Promise<T>,

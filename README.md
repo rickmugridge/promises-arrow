@@ -164,6 +164,14 @@ Specifically:
  * However, if an exception is thrown while executing `fn`, it is retried up to `retries` times.
    * Each time it retries, it first has a `timeout` delay, which is doubled each time for exponential back-off.
 
+#### + `poll<T>(fn: () => Promise<Option<T>>, retries = 3, timeout = 100): Promise<Option<T>>`
+ 
+ * This runs the `fn()` and returns its result if it's a Some value. 
+ * A None value means there is not yet a value from the poll. So it tries again.
+   The `timeout` delay is doubled each time for exponential back-off.
+ * However, if it has retried up to `retries` times, it returns a result of None.
+ * Any exceptions thrown by the `fn()` are not caught.
+
 ## SlidingWindow
 
 Writing/sending with a sliding window means that only so many sends can be in progress.
