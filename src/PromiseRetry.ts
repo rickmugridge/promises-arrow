@@ -81,6 +81,23 @@ export class PromiseRetry {
             {value: noValue, timedOut: false})
     }
 
+    static async retryUntilValid<T>(
+        fn: () => Promise<T | undefined>,
+        valid: (value: T | undefined) => boolean,
+        logger: (message: any) => void,
+        retries = 5,
+        timeout = 100
+    ): Promise<Option<T>> {
+        const result = await fn()
+        if (valid(result)) {
+            return Option.of(result)
+        } else if (retries <= 0) {
+            return Option.none()
+        }
+        await promises.waitForPromise(timeout)
+        return await PromiseRetry.retryUntilValid(fn, valid, logger, retries - 1, timeout * 2)
+    }
+
     private static retryOnTimeoutGivingFirstResult2<T>(fn: () => Promise<T>,
                                                        logger: (message: any) => void,
                                                        retries = 5,

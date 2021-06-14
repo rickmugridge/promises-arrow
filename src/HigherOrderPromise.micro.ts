@@ -1,8 +1,6 @@
 import {assertThat} from "mismatched";
 import {promises} from "./promises";
 
-const logger = () => undefined;
-
 describe('HigherOrderPromise:', () => {
     let sideEffects: Array<number> = [];
 

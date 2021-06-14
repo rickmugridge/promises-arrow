@@ -295,4 +295,36 @@ describe('Promises:', () => {
             assertThat(count).is(3)
         });
     });
+
+    describe("retryUntilValid()", () => {
+        let test: TestWithException;
+
+        beforeEach(() => {
+            test = new TestWithException();
+        });
+
+        class TestWithException {
+            counter = 0;
+            run(): Promise<any> {
+                this.counter++;
+                return Promise.resolve(this.counter);
+            }
+        }
+
+        it('First call is valid', async () => {
+            const result = await promises.retryUntilValid(() => test.run(), () => true, logger)
+            assertThat(result.getOrThrow()).is(1);
+        });
+
+        it('Second call is valid', async () => {
+            const result = await promises.retryUntilValid(() => test.run(), count => count > 1, logger)
+            assertThat(result.getOrThrow()).is(2);
+        });
+
+        it('None is valid', async () => {
+            const result = await promises.retryUntilValid(() => test.run(), count => false, logger,2,1)
+            assertThat(result.isNone()).is(true);
+        });
+
+    });
 });

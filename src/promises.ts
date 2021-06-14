@@ -31,6 +31,12 @@ export const promises = {
     retryOverExceptions: PromiseRetry.retryOverExceptions,
     retryOnTimeoutGivingFirstResult: PromiseRetry.retryOnTimeoutGivingFirstResult,
     retryOnTimeout: PromiseRetry.retryOnTimeout,
+    retryUntilValid: <T>(fn: () => Promise<T | undefined>,
+                         valid: (value: T | undefined) => boolean,
+                         logger: (message: any) => void,
+                         retries = 5,
+                         timeout = 100) =>
+        PromiseRetry.retryUntilValid<T>(fn, valid, logger, retries, timeout),
     slidingWindow: (context: string,
                     producer: SlidingWindowProducer,
                     logger: (message: object | string) => void,

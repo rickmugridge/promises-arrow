@@ -164,6 +164,18 @@ Specifically:
  * However, if an exception is thrown while executing `fn`, it is retried up to `retries` times.
    * Each time it retries, it first has a `timeout` delay, which is doubled each time for exponential back-off.
 
+#### + `retryUntilValid<T>(fn: () => Promise<T | undefined>, valid: (value: T | undefined) => boolean, logger: (message: any) => void, retries = 5, timeout = 100): Promise<Option<T>>`
+
+ * It returns the first value returned by the `fn()` that satisfies `valid()`. The value is returned as a `Some`.
+ * It retries the given number of time, with exponential backoff on delays (`timeout`), and if unsuccessful, returns a `None`
+ 
+Specifically:
+
+ * This runs the `fn` and returns its result. 
+ * However, if that times out, it tries again. But if an earlier call returns a value, that will be returned.
+ * However, if an exception is thrown while executing `fn`, it is retried up to `retries` times.
+   * Each time it retries, it first has a `timeout` delay, which is doubled each time for exponential back-off.
+
 #### + `poll<T>(fn: () => Promise<Option<T>>, retries = 3, timeout = 100): Promise<Option<T>>`
  
  * This runs the `fn()` and returns its result if it's a Some value. 
