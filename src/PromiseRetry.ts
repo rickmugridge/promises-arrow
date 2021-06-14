@@ -94,6 +94,7 @@ export class PromiseRetry {
         } else if (retries <= 0) {
             return Option.none()
         }
+        logger('Retry')
         await promises.waitForPromise(timeout)
         return await PromiseRetry.retryUntilValid(fn, valid, logger, retries - 1, timeout * 2)
     }
