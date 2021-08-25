@@ -1,6 +1,6 @@
 {
   "name": "promises-arrow",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "description": "`promises-arrow` is a library of (1) higher order functions, such as `map()` and `filter()`where the function returns a Promisel (2) Functions that wait, returning a Promise; (3) Functions that manage retrying an operation N times until it succeeds; (4,5) etc.",
   "author": {
     "name": "Rick Mugridge",
@@ -30,12 +30,14 @@
     "test:micro": "npm run clean && npm run compile && npm run retest:micro",
     "retest:micro": "mocha --exit \"./dist/src/**/*.micro.js\""
   },
+  "dependencies": {
+    "prelude-ts": "^1.0.2"
+  },
   "devDependencies": {
     "@types/mocha": "^5.2.3",
     "@types/node": "~9.4.6",
     "mismatched": "2.1.15",
     "mocha": "^5.2.0",
-    "prelude-ts": "^1.0.2",
     "rimraf": "^2.6.2",
     "thespian": "2.1.16",
     "ts-node": "^6.2.0",

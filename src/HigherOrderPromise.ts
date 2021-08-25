@@ -1,5 +1,4 @@
 import {DeferredPromise} from "./DeferredPromise";
-import {Option} from "prelude-ts";
 
 export class HigherOrderPromise {
     static while<T>(fnContinue: () => boolean,
