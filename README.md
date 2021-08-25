@@ -49,7 +49,7 @@ returning whether some condition is true in a Promise. Eg, in an async function:
     const filteredResults = await promises.filter(collectionOfData, data => service.predicate(data))
 ```
 
-#### + `forEach: <T>(items: Array<T>, fn: (item: T) => Promise<any>) => Promise<any>`
+#### + `forEach: <T>(items: Array<T>, fn: (item: T, index: number) => Promise<any>) => Promise<any>`
 
 This takes an array of some `items`, plus a function (`fn`) that is applied to each of the elements in turn
 for some side-effect.
@@ -62,7 +62,7 @@ Eg, this could be used to take an array of some data, where the fn passes that d
      await promises.forEach(collectionOfData, data => service.command(data))
  ```
  
-#### + `forEachIterator: <T>(it: Iterator<T>, fn: (item: T) => Promise<any>) => Promise<any>`
+#### + `forEachIterator: <T>(it: Iterator<T>, fn: (item: T, index: number) => Promise<any>) => Promise<any>`
 
 Like `forEach`, except where the items are provided by an `Iterator`.
 

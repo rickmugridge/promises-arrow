@@ -21,20 +21,24 @@ export class HigherOrderPromise {
     // Calls the function with each of the items in turn, one at a time.
     // It does not alter the items array
     static forEach<T>(items: Array<T>,
-                      fn: (item: T) => Promise<any>): Promise<any> {
-        return HigherOrderPromise.for(0, items.length, 1, i => fn(items[i]));
+                      fn: (item: T, index: number) => Promise<any>): Promise<any> {
+        return HigherOrderPromise.for(0, items.length, 1, i => fn(items[i], i));
     }
 
     // Calls the function with each of the iterator items in turn, one at a time, recursively.
     static forEachIterator<T>(it: Iterator<T>,
-                              fn: (item: T) => Promise<any>): Promise<any> {
+                              fn: (item: T, index: number) => Promise<any>): Promise<any> {
+        let index = 0
         let head: IteratorResult<T>;
         return HigherOrderPromise.while(
             () => {
                 head = it.next();
                 return !head.done;
             },
-            () => fn(head.value)
+            () => {
+                index += 1
+                return fn(head.value, index-1)
+            }
         );
     }
 

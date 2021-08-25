@@ -11,9 +11,9 @@ export const promises = {
         HigherOrderPromise.flatMap<T, U>(items, fn),
     filter: <T>(items: Array<T>, fn: (item: T) => Promise<boolean>) =>
         HigherOrderPromise.filter<T>(items, fn),
-    forEach: <T>(items: Array<T>, fn: (item: T) => Promise<any>) =>
+    forEach: <T>(items: Array<T>, fn: (item: T, index: number) => Promise<any>) =>
         HigherOrderPromise.forEach<T>(items, fn),
-    forEachIterator: <T>(it: Iterator<T>, fn: (item: T) => Promise<any>) =>
+    forEachIterator: <T>(it: Iterator<T>, fn: (item: T, index: number) => Promise<any>) =>
         HigherOrderPromise.forEachIterator<T>(it, fn),
     forEachWithConstrainedParallelism: <T, U>(items: Array<T>, asynchCount: number, fn: (item: T) => Promise<unknown>) =>
         HigherOrderPromise.forEachWithConstrainedParallelism<T, U>(items, asynchCount, fn),
