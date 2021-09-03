@@ -2,7 +2,7 @@ import {assertThat, match} from "mismatched";
 import {promises} from "./promises";
 import {Thespian, TMocked} from "thespian";
 import {fail} from "assert";
-import {None, Some} from "prelude-ts";
+import {Either, None, Some} from "prelude-ts";
 
 const logger = () => undefined;
 const promiseForever = () => new Promise<number>(() => {
@@ -273,11 +273,38 @@ describe('Promises:', () => {
         it("Does not catch any exceptions", async () => {
             return promises.poll(() => {
                 throw new Error('err')
+            }, () => true ).then(() => fail('unexpected'), e => assertThat(e.message).is('err'));
+        });
+
+        it("Passes first call result back", async () => {
+            let result = await promises.poll(() => Promise.resolve(true), (x) => x);
+            assertThat(result).is(true)
+        });
+
+        it("Passes back after third call", async () => {
+            let count = 0;
+            const fn = () => {
+                if (count < 3) {
+                    count += 1;
+                    return Promise.resolve(false)
+                }
+                return Promise.resolve(true)
+            };
+            let result = await promises.poll(fn, (x) => x, 3, 1);
+            assertThat(result).is(true);
+            assertThat(count).is(3)
+        });
+    })
+
+    describe("pollOption()", () => {
+        it("Does not catch any exceptions", async () => {
+            return promises.pollOption(() => {
+                throw new Error('err')
             }).then(() => fail('unexpected'), e => assertThat(e.message).is('err'));
         });
 
         it("Passes first call result back", async () => {
-            let result = await promises.poll(() => Promise.resolve(new Some('ok')));
+            let result = await promises.pollOption(() => Promise.resolve(new Some('ok')));
             assertThat(result).is(new Some('ok'));
         });
 
@@ -290,8 +317,35 @@ describe('Promises:', () => {
                 }
                 return Promise.resolve(new Some('ok'))
             };
-            let result = await promises.poll(fn, 3, 1);
+            let result = await promises.pollOption(fn, 3, 1);
             assertThat(result).is(new Some('ok'));
+            assertThat(count).is(3)
+        });
+    });
+
+    describe("pollEither()", () => {
+        it("Does not catch any exceptions", async () => {
+            return promises.pollEither(() => {
+                throw new Error('err')
+            }).then(() => fail('unexpected'), e => assertThat(e.message).is('err'));
+        });
+
+        it("Passes first call result back", async () => {
+            let result = await promises.pollEither(() => Promise.resolve(Either.right('ok')));
+            assertThat(result).is(Either.right('ok'));
+        });
+
+        it("Passes back after third call", async () => {
+            let count = 0;
+            const fn = () => {
+                if (count < 3) {
+                    count += 1;
+                    return Promise.resolve(Either.left('oops'));
+                }
+                return Promise.resolve(Either.right('ok'))
+            };
+            let result = await promises.pollEither(fn, 3, 1);
+            assertThat(result).is(Either.right('ok'));
             assertThat(count).is(3)
         });
     });

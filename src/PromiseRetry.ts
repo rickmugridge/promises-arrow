@@ -1,5 +1,5 @@
 import {promises} from "./promises";
-import {Option} from "prelude-ts";
+import {Either, Option} from "prelude-ts";
 
 const noValue = Symbol();
 const timedOutSymbol = Symbol();
@@ -7,16 +7,30 @@ const timedOutSymbol = Symbol();
 export class PromiseRetry {
     // Try the fn up to N times until it succeeds with a delay after each failure to get a value. Uses exponential back-off
     // Any exceptions thrown by the fn() are not caught; they are immediately passed out to the caller of poll()
-    static async poll<T>(fn: () => Promise<Option<T>>,
+    static async pollOption<T>(fn: () => Promise<Option<T>>,
                          retries = 3,
                          timeout = 100): Promise<Option<T>> {
+        return PromiseRetry.poll(fn, (o: Option<T>) => o.isSome(), retries, timeout)
+    }
+
+    static async pollEither<L, R>(fn: () => Promise<Either<L, R>>,
+                         retries = 3,
+                         timeout = 100): Promise<Either<L, R>> {
+        return PromiseRetry.poll(fn, (o: Either<L, R>) => o.isRight(), retries, timeout)
+    }
+
+    static async poll<T>(fn: () => Promise<T>,
+      successCheck: (t: T) => boolean,
+                         retries = 3,
+                         timeout = 100): Promise<T> {
         const result = await fn()
-        if (result.isSome() || retries <= 0) {
+        if (successCheck(result) || retries <= 0) {
             return result;
         }
         await promises.waitForPromise(timeout)
-        return await PromiseRetry.poll(fn, retries - 1, timeout * 2)
+        return await PromiseRetry.poll(fn, successCheck, retries - 1, timeout * 2)
     }
+
 
     // Try the fn up to N times until it succeeds with a delay after each failure. Uses exponential back-off
     static retryOverExceptions<T>(fn: () => Promise<T>,

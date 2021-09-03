@@ -28,6 +28,8 @@ export const promises = {
         WaitPromise.waitForTimeoutOrPromise<T>(timeout, fn),
 
     poll: PromiseRetry.poll,
+    pollOption: PromiseRetry.pollOption,
+    pollEither: PromiseRetry.pollEither,
     retryOverExceptions: PromiseRetry.retryOverExceptions,
     retryOnTimeoutGivingFirstResult: PromiseRetry.retryOnTimeoutGivingFirstResult,
     retryOnTimeout: PromiseRetry.retryOnTimeout,
